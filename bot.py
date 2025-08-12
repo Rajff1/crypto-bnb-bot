@@ -695,6 +695,39 @@ def main():
 
     # Error handler
     app.add_error_handler(error_handler)
+    import os
+from flask import Flask, request
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
+
+TOKEN = os.environ.get("TELEGRAM_TOKEN")
+APP_URL = os.environ.get("APP_URL")  # e.g., "https://your-app.onrender.com"
+
+app = Flask(__name__)
+application = Application.builder().token(TOKEN).build()
+
+# Example command
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hello! I am alive on webhook mode 🚀")
+
+application.add_handler(CommandHandler("start", start))
+
+@app.route(f"/{TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    application.update_queue.put_nowait(update)
+    return "ok"
+
+@app.route("/")
+def home():
+    return "Bot is running!", 200
+
+if __name__ == "__main__":
+    # Set webhook
+    application.bot.set_webhook(f"{APP_URL}/{TOKEN}")
+    # Start Flask server
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
     logger.info("BNB Earner Bot starting...")
     app.run_polling()
