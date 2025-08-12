@@ -695,57 +695,38 @@ def main():
 
     # Error handler
     app.add_error_handler(error_handler)
-    import os
+import os
 from flask import Flask, request
 from telegram import Update
-from telegram.ext import Application, CommandHandler
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-TOKEN = os.environ.get("TELEGRAM_TOKEN", "YOUR_BOT_TOKEN")  # safer in env vars
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-# Create Flask app
+# Create the bot application
+application = Application.builder().token(BOT_TOKEN).build()
+
+# Flask app
 app = Flask(__name__)
 
-# Create Telegram bot application
-application = Application.builder().token(TOKEN).build()
-
-# Example command
-async def start(update, context):
-    await update.message.reply_text("Hello! Your bot is live on Render 🚀")
+# Simple /start command
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Bot is live ✅")
 
 application.add_handler(CommandHandler("start", start))
 
-# Flask route for webhook
-@app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
-    update = Update.de_json(request.get_json(force=True), application.bot)
-    application.update_queue.put(update)
-    return "ok"
-
-# Root route (optional)
-@app.route("/", methods=["GET"])
-def index():
-    return "Bot is running!"
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-from flask import Flask, request
-from telegram import Update
-from telegram.ext import Application
-
-app = Flask(__name__)
-BOT_TOKEN = "your_bot_token_here"
-application = Application.builder().token(BOT_TOKEN).build()
-
+# Webhook route for Telegram
 @app.route("/", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
     application.update_queue.put(update)
     return "ok"
 
-    logger.info("BNB Earner Bot starting...")
-    app.run_polling()
-
+# Optional: health check route
+@app.route("/", methods=["GET"])
+def home():
+    return "Bot is running"
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+ 
