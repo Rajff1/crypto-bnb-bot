@@ -729,10 +729,23 @@ def index():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+from flask import Flask, request
+from telegram import Update
+from telegram.ext import Application
+
+app = Flask(__name__)
+BOT_TOKEN = "your_bot_token_here"
+application = Application.builder().token(BOT_TOKEN).build()
+
+@app.route("/", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    application.update_queue.put(update)
+    return "ok"
 
     logger.info("BNB Earner Bot starting...")
     app.run_polling()
 
 
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
