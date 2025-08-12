@@ -13,12 +13,6 @@ Features:
 import os
 import sqlite3
 import logging
-from telegram.error import TelegramError
-
-async def error_handler(update, context):
-    print(f"Error: {context.error}")
-
-app.add_error_handler(error_handler)
 from decimal import Decimal, getcontext, ROUND_DOWN
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
@@ -657,6 +651,50 @@ def main():
 
     # Messages
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+
+    logger.info("BNB Earner Bot starting...")
+    app.run_polling()
+
+
+from telegram.error import TelegramError
+
+async def error_handler(update, context):
+    print(f"Error: {context.error}")
+
+def main():
+    db_init()
+    if not BOT_TOKEN or ADMIN_ID == 0:
+        logger.error("BOT_TOKEN and ADMIN_ID must be set in .env")
+        return
+
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    # Public commands
+    app.add_handler(CommandHandler("start", start_cmd))
+    app.add_handler(CommandHandler("balance", my_balance_action))
+    app.add_handler(CommandHandler("claim", claim_daily_action))
+    app.add_handler(CommandHandler("setwallet", set_wallet_prompt))
+    app.add_handler(CommandHandler("withdraw", withdraw_action))
+    app.add_handler(CommandHandler("referral", referral_action))
+
+    # Admin commands
+    app.add_handler(CommandHandler("admin_stats", admin_stats_cmd))
+
+    # Callbacks
+    app.add_handler(CallbackQueryHandler(check_both_callback, pattern="^check_both$"))
+    app.add_handler(CallbackQueryHandler(main_menu_callback, pattern="^main_menu$"))
+    app.add_handler(CallbackQueryHandler(lambda u, c: claim_daily_action(u, c), pattern="^claim_daily$"))
+    app.add_handler(CallbackQueryHandler(lambda u, c: my_balance_action(u, c), pattern="^my_balance$"))
+    app.add_handler(CallbackQueryHandler(lambda u, c: referral_action(u, c), pattern="^referral$"))
+    app.add_handler(CallbackQueryHandler(lambda u, c: set_wallet_prompt(u, c), pattern="^set_wallet$"))
+    app.add_handler(CallbackQueryHandler(lambda u, c: withdraw_action(u, c), pattern="^withdraw$"))
+    app.add_handler(CallbackQueryHandler(approve_reject_callback, pattern=r'^(approve|reject):'))
+
+    # Messages
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+
+    # Error handler
+    app.add_error_handler(error_handler)
 
     logger.info("BNB Earner Bot starting...")
     app.run_polling()
