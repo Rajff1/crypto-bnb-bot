@@ -13,6 +13,12 @@ Features:
 import os
 import sqlite3
 import logging
+from telegram.error import TelegramError
+
+async def error_handler(update, context):
+    print(f"Error: {context.error}")
+
+app.add_error_handler(error_handler)
 from decimal import Decimal, getcontext, ROUND_DOWN
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
