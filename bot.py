@@ -698,36 +698,37 @@ def main():
     import os
 from flask import Flask, request
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler
 
-TOKEN = os.environ.get("TELEGRAM_TOKEN")
-APP_URL = os.environ.get("APP_URL")  # e.g., "https://your-app.onrender.com"
+TOKEN = os.environ.get("TELEGRAM_TOKEN", "YOUR_BOT_TOKEN")  # safer in env vars
 
+# Create Flask app
 app = Flask(__name__)
+
+# Create Telegram bot application
 application = Application.builder().token(TOKEN).build()
 
 # Example command
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Hello! I am alive on webhook mode 🚀")
+async def start(update, context):
+    await update.message.reply_text("Hello! Your bot is live on Render 🚀")
 
 application.add_handler(CommandHandler("start", start))
 
+# Flask route for webhook
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    application.update_queue.put_nowait(update)
+    application.update_queue.put(update)
     return "ok"
 
-@app.route("/")
-def home():
-    return "Bot is running!", 200
+# Root route (optional)
+@app.route("/", methods=["GET"])
+def index():
+    return "Bot is running!"
 
 if __name__ == "__main__":
-    # Set webhook
-    application.bot.set_webhook(f"{APP_URL}/{TOKEN}")
-    # Start Flask server
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
     logger.info("BNB Earner Bot starting...")
     app.run_polling()
