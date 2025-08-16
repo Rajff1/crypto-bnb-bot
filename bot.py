@@ -659,12 +659,39 @@ import os
 PORT = int(os.environ.get("PORT", 5000))
 WEBHOOK_URL = "https://crypto-bnb-bot.onrender.com"  # replace with your Render URL
 
-app.run_webhook(
-    listen="0.0.0.0",
-    port=PORT,
-    url_path=BOT_TOKEN,
-    webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}"
-)
+from flask import Flask, request
+from telegram import Update
+from telegram.ext import Application
+import logging
+import os
+
+# logging setup
+logging.basicConfig(level=logging.INFO)
+
+# Flask app
+flask_app = Flask(__name__)
+
+# Telegram bot app
+TOKEN = os.getenv("BOT_TOKEN")
+application = Application.builder().token(TOKEN).build()
+
+# your handlers here
+# application.add_handler(...)
+
+@flask_app.route("/")
+def home():
+    return "BNB Earner Bot is live!"
+
+@flask_app.route(f"/{TOKEN}", methods=["POST"])
+async def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    await application.process_update(update)
+    return "ok"
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    flask_app.run(host="0.0.0.0", port=port)
+
 
 if __name__ == "__main__":
     main()     
