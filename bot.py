@@ -653,6 +653,8 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
     logger.info("BNB Earner Bot starting...")
+    import os
+
     PORT = int(os.environ.get("PORT", 5000))
     WEBHOOK_URL = "https://crypto-bnb-bot.onrender.com"  # your Render URL
 
