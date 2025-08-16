@@ -16,6 +16,7 @@ import logging
 from decimal import Decimal, getcontext, ROUND_DOWN
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
+from flask import app
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import (
@@ -652,18 +653,18 @@ def main():
     # Messages
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
-    logger.info("BNB Earner Bot starting...")
-    import os
+logger.info("BNB Earner Bot starting...")
+import os
 
-    PORT = int(os.environ.get("PORT", 5000))
-    WEBHOOK_URL = "https://crypto-bnb-bot.onrender.com"  # your Render URL
+PORT = int(os.environ.get("PORT", 5000))
+WEBHOOK_URL = "https://crypto-bnb-bot.onrender.com"  # replace with your Render URL
 
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path=BOT_TOKEN,
-        webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}"
-    )
+app.run_webhook(
+    listen="0.0.0.0",
+    port=PORT,
+    url_path=BOT_TOKEN,
+    webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}"
+)
 
 if __name__ == "__main__":
-    main()
+    main()     
